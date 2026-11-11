@@ -1,0 +1,125 @@
+# Kirby & The Amazing Mirror (USA), AGB-B8KE.
+
+[game]
+name = "Kirby & The Amazing Mirror"
+short_name = "kirby_amazing_mirror"
+
+[program]
+name = "Kirby & The Amazing Mirror (USA)"
+id = "B8KE"
+load_address = 0x08000000
+size = 0x01000000
+entry_pc = 0x08000000
+speculative_literal_harvest = true
+aot_scan_start = 0x080000C0
+aot_scan_end = 0x0815BDD8
+static_resume_all = true
+codegen_shards = 64
+
+[identity]
+sha1 = "274b102b6d940f46861a92b4e65f89a51815c12c"
+md5 = "df5efe075b35859529ebf82a4d824458"
+
+[bios]
+path = "bios/gba_bios.bin"
+sha1 = "300c20df6731a33952ded8c436f7f186d25d3492"
+
+[rom]
+path = "roms/kirby_amazing_mirror_usa.gba"
+sha1 = "274b102b6d940f46861a92b4e65f89a51815c12c"
+
+[save]
+type = "sram"
+size = 32768
+path = "saves/kirby_amazing_mirror_usa.sav"
+
+[runtime]
+debug_port = 19881
+window_title = "Kirby & The Amazing Mirror Recomp"
+
+[video]
+view_width = 284
+
+[audio]
+shadow = false
+
+# Everything after the linked .text section (decomp linker.ld) is rodata,
+# graphics, audio and level data.
+[[data_range]]
+start = 0x0815BDD8
+end = 0x09000000
+note = "rodata and assets (katam linker.ld)"
+
+# 16:9 sprite culling. DisplaySprite (katam src/sprite.c) and its two
+# siblings only draw a sprite when `x + width >= 0 && x <= 240`. With the wide
+# view active these immediates are widened at runtime (src/kirby_extended_view.cpp)
+# so objects already spawned off-screen are drawn into the margins.
+[[thumb_alu_immediate_override]]
+addr = 0x081561E0
+note = "DisplaySprite: x + width >= 0 (left edge)"
+[[thumb_alu_immediate_override]]
+addr = 0x081561E6
+note = "DisplaySprite: x <= 240 (right edge)"
+[[thumb_alu_immediate_override]]
+addr = 0x0815666C
+note = "sprite draw variant 2: left edge"
+[[thumb_alu_immediate_override]]
+addr = 0x08156672
+note = "sprite draw variant 2: right edge"
+[[extra_func]]
+addr = 0x081569A0
+mode = "thumb"
+name = "kirby_sub_081569A0_draw_sprite_multi"
+note = "katam sub_081569A0; reached only indirectly, needed for the culling override."
+
+[[thumb_alu_immediate_override]]
+addr = 0x08156ADE
+note = "sprite draw variant 3: left edge"
+[[thumb_alu_immediate_override]]
+addr = 0x08156AE6
+note = "sprite draw variant 3: right edge"
+
+# Wide-view object spawning (katam src/code_080023A4.c, src/kirby.c). The
+# game spawns objects when their 16 px column enters a window around the
+# 240 px camera and despawns them outside |x - 120 - cam| <= 168. Both windows
+# are widened by the same N columns per side (N = ceil(view margins / 16)),
+# so objects exist before they reach the wider screen edges.
+[[thumb_alu_immediate_override]]
+addr = 0x0800A6F8
+note = "sub_0800A6E8: player 0 window x = cam/16 - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A714
+note = "sub_0800A6E8: player 1 window x - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A72E
+note = "sub_0800A6E8: player 2 window x - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A748
+note = "sub_0800A6E8: player 3 window x - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A66C
+note = "sub_0800A60C: right spawn column = window x + 19"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A4D8
+note = "sub_0800A460: row spawn x window width 19"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A0D2
+note = "CreateLevelObjects: player 0 window x - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A0FA
+note = "CreateLevelObjects: player 1 window x - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A124
+note = "CreateLevelObjects: player 2 window x - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A14E
+note = "CreateLevelObjects: player 3 window x - 2"
+[[thumb_alu_immediate_override]]
+addr = 0x0800A1CC
+note = "CreateLevelObjects: window width (x >= origin - 1 + 22)"
+[[thumb_alu_immediate_override]]
+addr = 0x0803D788
+note = "sub_0803D6B4: keep-alive half width 168 (object position)"
+[[thumb_alu_immediate_override]]
+addr = 0x0803D7C6
+note = "sub_0803D6B4: keep-alive half width 168 (template position)"
